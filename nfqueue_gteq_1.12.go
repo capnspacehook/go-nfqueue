@@ -7,6 +7,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/florianl/go-nfqueue/internal/unix"
@@ -20,6 +21,8 @@ type Nfqueue struct {
 	Con *netlink.Conn
 
 	logger *log.Logger
+
+	wg sync.WaitGroup
 
 	flags        []byte // uint32
 	maxPacketLen []byte // uint32
@@ -123,6 +126,7 @@ func (nfqueue *Nfqueue) setVerdict(id uint32, verdict int, batch bool, attribute
 }
 
 func (nfqueue *Nfqueue) socketCallback(ctx context.Context, fn HookFunc, errfn ErrorFunc, seq uint32) {
+	defer nfqueue.wg.Done()
 	defer func() {
 		// unbinding from queue
 		_, err := nfqueue.setConfig(uint8(unix.AF_UNSPEC), seq, nfqueue.queue, []netlink.Attribute{
@@ -130,16 +134,19 @@ func (nfqueue *Nfqueue) socketCallback(ctx context.Context, fn HookFunc, errfn E
 		})
 		if err != nil {
 			nfqueue.logger.Printf("Could not unbind from queue: %v\n", err)
-			return
 		}
 	}()
+
+	nfqueue.wg.Add(1)
 	go func() {
 		// block until context is done
 		<-ctx.Done()
 		// Set the read deadline to a point in the past to interrupt
 		// possible blocking Receive() calls.
 		nfqueue.Con.SetReadDeadline(time.Now().Add(-1 * time.Second))
+		nfqueue.wg.Done()
 	}()
+
 	for {
 		if err := ctx.Err(); err != nil {
 			nfqueue.logger.Printf("Stop receiving nfqueue messages: %v\n", err)

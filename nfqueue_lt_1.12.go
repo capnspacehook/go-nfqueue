@@ -25,6 +25,8 @@ type Nfqueue struct {
 
 	logger *log.Logger
 
+	wg sync.WaitGroup
+
 	flags        []byte // uint32
 	maxPacketLen []byte // uint32
 	family       uint8
@@ -129,6 +131,7 @@ func (nfqueue *Nfqueue) sendVerdicts() error {
 }
 
 func (nfqueue *Nfqueue) socketCallback(ctx context.Context, fn HookFunc, errfn ErrorFunc, seq uint32) {
+	defer nfqueue.wg.Done()
 	defer func() {
 		// unbinding from queue
 		_, err := nfqueue.setConfig(uint8(unix.AF_UNSPEC), seq, nfqueue.queue, []netlink.Attribute{
@@ -136,7 +139,6 @@ func (nfqueue *Nfqueue) socketCallback(ctx context.Context, fn HookFunc, errfn E
 		})
 		if err != nil {
 			nfqueue.logger.Printf("Could not unbind from queue: %v\n", err)
-			return
 		}
 	}()
 	for {

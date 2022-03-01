@@ -20,7 +20,9 @@ func (devNull) Write(p []byte) (int, error) {
 
 // Close the connection to the netfilter queue subsystem
 func (nfqueue *Nfqueue) Close() error {
-	return nfqueue.Con.Close()
+	err := nfqueue.Con.Close()
+	nfqueue.wg.Wait()
+	return err
 }
 
 // SetVerdictWithMark signals the kernel the next action and the mark for a specified package id
@@ -143,6 +145,7 @@ func (nfqueue *Nfqueue) RegisterWithErrorFunc(ctx context.Context, fn HookFunc, 
 		return err
 	}
 
+	nfqueue.wg.Add(1)
 	go nfqueue.socketCallback(ctx, fn, errfn, seq)
 
 	return nil

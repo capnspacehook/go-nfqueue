@@ -5,6 +5,7 @@ package nfqueue
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 	"log"
 	"time"
 
@@ -38,7 +39,12 @@ func Open(config *Config) (*Nfqueue, error) {
 		return nil, ErrInvFlag
 	}
 
-	con, err := netlink.Dial(unix.NETLINK_NETFILTER, &netlink.Config{NetNS: config.NetNS})
+	netlinkConf := &netlink.Config{NetNS: config.NetNS, Strict: true}
+	con, err := netlink.Dial(unix.NETLINK_NETFILTER, netlinkConf)
+	if err != nil && errors.Is(err, unix.ENOPROTOOPT) {
+		netlinkConf.Strict = false
+		con, err = netlink.Dial(unix.NETLINK_NETFILTER, netlinkConf)
+	}
 	if err != nil {
 		return nil, err
 	}

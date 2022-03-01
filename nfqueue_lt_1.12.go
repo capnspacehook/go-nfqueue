@@ -1,4 +1,5 @@
-//+build !go1.12
+//go:build !go1.12
+// +build !go1.12
 
 package nfqueue
 
@@ -8,7 +9,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/florianl/go-nfqueue/internal/unix"
+	"github.com/capnspacehook/go-nfqueue/internal/unix"
 
 	"github.com/mdlayher/netlink"
 )

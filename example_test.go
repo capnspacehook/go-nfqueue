@@ -1,4 +1,5 @@
-//+build linux
+//go:build linux
+// +build linux
 
 package nfqueue_test
 
@@ -7,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	nfqueue "github.com/florianl/go-nfqueue"
+	nfqueue "github.com/capnspacehook/go-nfqueue"
 )
 
 func ExampleNfqueue_Register() {

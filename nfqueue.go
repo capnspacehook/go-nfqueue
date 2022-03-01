@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"log"
 
-	"github.com/florianl/go-nfqueue/internal/unix"
+	"github.com/capnspacehook/go-nfqueue/internal/unix"
 
 	"github.com/mdlayher/netlink"
 	"github.com/pkg/errors"

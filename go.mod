@@ -1,4 +1,4 @@
-module github.com/florianl/go-nfqueue
+module github.com/capnspacehook/go-nfqueue
 
 require (
 	github.com/mdlayher/netlink v1.6.0
